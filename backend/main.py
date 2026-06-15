@@ -13,6 +13,8 @@ root_dir = os.path.dirname(current_dir)
 sys.path.append(root_dir)
 
 app = FastAPI()
+now = datetime.now()
+print("Current time:", now.strftime("%Y-%m-%d %H:%M:%S"))
 
 from ai_clients import get_chroma_client, embed
 
@@ -54,6 +56,7 @@ def root():
 @app.post("/issues")
 def log_issue(issue: Issue):
     """Log a new issue and embed it for RAG"""
+    print("Current time(log issue):", now.strftime("%Y-%m-%d %H:%M:%S"))
     try:
         issue_record = {
             "id": str(len(issues_db)),
@@ -100,6 +103,7 @@ def log_issue(issue: Issue):
 @app.get("/suggestions")
 def get_suggestions(problem: str, context: str = ""):
     """Get similar past issues using RAG (embeddings search)"""
+    print("Current time(suggestion):", now.strftime("%Y-%m-%d %H:%M:%S"))
 
     # Combine problem and context (same way as logging)
     combined_text = f"{problem}. Context: {context}"
@@ -122,6 +126,7 @@ def get_suggestions(problem: str, context: str = ""):
 @app.post("/resolve")
 def resolve_issue(resolution: Resolution):
     """Mark an issue as resolved with a solution"""
+    print("Current time(resolve):", now.strftime("%Y-%m-%d %H:%M:%S"))
 
     for issue in issues_db:
         if issue["id"] == resolution.issue_id:
@@ -139,6 +144,8 @@ def resolve_issue(resolution: Resolution):
 # 4. VIEW ALL ISSUES
 # ============================================
 @app.get("/issues")
+
 def get_all_issues():
+    print("Current time(get all issues):", now.strftime("%Y-%m-%d %H:%M:%S"))
     """View all logged issues"""
     return {"issues": issues_db}

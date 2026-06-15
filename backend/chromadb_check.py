@@ -34,6 +34,6 @@ for col in collections:
 # # #Clear collection
 # # # Retrieve the collection
 # collection = client.get_collection(name="issue_db")
-# #
-# # # Delete all items by passing all IDs inside it
+# # #
+# # # # Delete all items by passing all IDs inside it
 # collection.delete(ids=collection.get()["ids"])
