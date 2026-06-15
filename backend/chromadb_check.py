@@ -31,9 +31,9 @@ for col in collections:
     # Print the first 5 items inside the collection
     print(col.peek(limit=5))
 #
-# #Clear collection
-# # Retrieve the collection
+# # #Clear collection
+# # # Retrieve the collection
 # collection = client.get_collection(name="issue_db")
-#
-# # Delete all items by passing all IDs inside it
+# #
+# # # Delete all items by passing all IDs inside it
 # collection.delete(ids=collection.get()["ids"])

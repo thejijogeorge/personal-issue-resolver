@@ -68,19 +68,37 @@
         {% endif %}
 
         <!-- All Issues -->
-        {% if issues %}
+<!--        {% if issues %} -->
         <div class="section">
             <h2>All Issues</h2>
-            {% for issue in issues %}
+<!--             {% for issue in issues %} -->
             <div class="issue">
                 <strong>{{ issue.problem }}</strong>
+                <p>ID: {{ issue.id }}</p>
                 <p>Context: {{ issue.context }}</p>
                 <p>Status: {% if issue.resolved %}✅ Resolved{% else %}⏳ Open{% endif %}</p>
                 {% if issue.solution %}<p>Solution: {{ issue.solution }}</p>{% endif %}
             </div>
-            {% endfor %}
+<!--            {% endfor %} -->
         </div>
-        {% endif %}
+<!--         {% endif %} -->
+
+        <!-- Resolve Issue Section -->
+        <!-- Resolve Issue Section -->
+        <div class="section">
+            <h2>Resolve an Issue</h2>
+            <form method="POST">
+                <input type="hidden" name="action" value="resolve">
+
+                <label>Issue ID:</label>
+                <input type="text" name="issue_id" required placeholder="e.g., 0, 1, 2...">
+
+                <label>Solution:</label>
+                <textarea name="solution" required></textarea>
+
+                <button type="submit">Mark as Resolved</button>
+            </form>
+        </div>
     </div>
 </body>
 </html>

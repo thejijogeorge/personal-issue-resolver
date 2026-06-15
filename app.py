@@ -9,7 +9,15 @@ API_URL = "http://127.0.0.1:8000"
 
 
 @app.route("/", methods=["GET", "POST"])
+@app.route("/", methods=["GET", "POST"])
 def index():
+    message = None
+    suggestions = None
+
+    # Always fetch issues
+    issues_response = requests.get(f"{API_URL}/issues")
+    issues = issues_response.json().get("issues", [])
+
     if request.method == "POST":
         action = request.form.get("action")
 
@@ -22,7 +30,7 @@ def index():
                 json={"problem": problem, "context": context}
             )
             result = response.json()
-            return render_template("index.html", message=f"Issue logged: {result.get('issue_id')}")
+            message = f"✅ Issue logged: {result.get('issue_id')}"
 
         elif action == "search":
             problem = request.form.get("search_problem")
@@ -33,14 +41,19 @@ def index():
                 params={"problem": problem, "context": context}
             )
             suggestions = response.json()
-            return render_template("index.html", suggestions=suggestions)
 
-    # GET /issues to show all
-    issues_response = requests.get(f"{API_URL}/issues")
-    issues = issues_response.json().get("issues", [])
+        elif action == "resolve":
+            issue_id = request.form.get("issue_id")
+            solution = request.form.get("solution")
 
-    return render_template("index.html", issues=issues)
+            response = requests.post(
+                f"{API_URL}/resolve",
+                json={"issue_id": issue_id, "solution": solution}
+            )
+            result = response.json()
+            message = f"✅ Issue resolved: {result.get('status')}"
 
+    return render_template("index.html", issues=issues, message=message, suggestions=suggestions)
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
