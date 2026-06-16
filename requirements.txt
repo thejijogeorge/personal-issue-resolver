@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+flask
+requests
+chromadb
+ollama
+python-dotenv
+pypdf
+python-docx
+openai

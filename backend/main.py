@@ -56,43 +56,34 @@ def root():
 @app.post("/issues")
 def log_issue(issue: Issue):
     """Log a new issue and embed it for RAG"""
-    print("Current time(log issue):", now.strftime("%Y-%m-%d %H:%M:%S"))
     try:
-        issue_record = {
-            "id": str(len(issues_db)),
-            "problem": issue.problem,
-            "context": issue.context,
-            "created_at": datetime.now().isoformat(),
-            "resolved": False,
-            "solution": None
-        }
-        issues_db.append(issue_record)
-
-        # ===== NEW: EMBED AND STORE IN CHROMADB =====
+        # Get next ID from ChromaDB collection size
+        existing_issues = collection.get()
+        issue_id = str(len(existing_issues["ids"]))
 
         # Combine problem and context for richer embedding
         combined_text = f"{issue.problem}. Context: {issue.context}"
 
-        # Embed using Ollama (via ai_clients.embed())
+        # Embed using Ollama
         embedding = embed(combined_text)
 
-        # Store in ChromaDB
+        # Store in ChromaDB (single source of truth)
         collection.add(
-            ids=[issue_record["id"]],
+            ids=[issue_id],
             embeddings=[embedding],
             documents=[combined_text],
             metadatas=[{
                 "problem": issue.problem,
                 "context": issue.context,
                 "resolved": False,
-             #   "solution": None
+                "created_at": datetime.now().isoformat()
             }]
         )
 
-        return {"status": "logged", "issue_id": issue_record["id"]}
+        return {"status": "logged", "issue_id": issue_id}
 
     except Exception as e:
-        print(f"ERROR: {str(e)}")
+        print(f"ERROR logging issue: {str(e)}")
         return {"status": "error", "message": str(e)}
 
 
@@ -126,26 +117,76 @@ def get_suggestions(problem: str, context: str = ""):
 @app.post("/resolve")
 def resolve_issue(resolution: Resolution):
     """Mark an issue as resolved with a solution"""
-    print("Current time(resolve):", now.strftime("%Y-%m-%d %H:%M:%S"))
+    try:
+        # Get all issues from ChromaDB
+        results = collection.get()
 
-    for issue in issues_db:
-        if issue["id"] == resolution.issue_id:
-            issue["resolved"] = True
-            issue["solution"] = resolution.solution
+        # Flatten the IDs in case they come as nested lists
+        ids = results["ids"]
+        if ids and isinstance(ids[0], list):
+            ids = ids[0]
 
-            # TODO: Update in ChromaDB too
+        # Find the issue by ID
+        if resolution.issue_id not in ids:
+            return {"status": "not found"}
 
-            return {"status": "resolved"}
+        # Find the index of this issue
+        idx = ids.index(resolution.issue_id)
 
-    return {"status": "not found"}
+        # Get current metadata
+        # Get current metadata
+        metadatas = results["metadatas"]
+        if metadatas and isinstance(metadatas[0], list):
+            metadatas = metadatas[0]
+
+
+        current_metadata = metadatas[idx]
+
+        # Update metadata with resolved status and solution
+        updated_metadata = {
+            "problem": current_metadata.get("problem"),
+            "context": current_metadata.get("context"),
+            "resolved": True,
+            "solution": resolution.solution,
+            "created_at": current_metadata.get("created_at")
+        }
+
+        # Update in ChromaDB
+        collection.update(
+            ids=[resolution.issue_id],
+            metadatas=[updated_metadata]
+        )
+
+        return {"status": "resolved"}
+
+    except Exception as e:
+        print(f"ERROR resolving issue: {str(e)}")
+        return {"status": "error", "message": str(e)}
 
 
 # ============================================
 # 4. VIEW ALL ISSUES
 # ============================================
 @app.get("/issues")
-
 def get_all_issues():
-    print("Current time(get all issues):", now.strftime("%Y-%m-%d %H:%M:%S"))
-    """View all logged issues"""
-    return {"issues": issues_db}
+    """Get all issues from ChromaDB"""
+    try:
+        # Get all items from ChromaDB collection
+        results = collection.get()
+
+        # Reconstruct issue records from ChromaDB data
+        issues = []
+        for i, issue_id in enumerate(results["ids"]):
+            issue = {
+                "id": issue_id,
+                "problem": results["metadatas"][i].get("problem", ""),
+                "context": results["metadatas"][i].get("context", ""),
+                "resolved": results["metadatas"][i].get("resolved", False),
+                "solution": results["metadatas"][i].get("solution"),
+                "created_at": "N/A"  # ChromaDB doesn't store this, so use N/A
+            }
+            issues.append(issue)
+
+        return {"issues": issues}
+    except Exception as e:
+        return {"issues": [], "error": str(e)}

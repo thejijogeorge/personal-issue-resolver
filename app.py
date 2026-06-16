@@ -8,6 +8,7 @@ app = Flask(__name__)
 
 # FastAPI backend URL
 API_URL = "http://127.0.0.1:8000"
+#API_URL = "http://fastapi:8000"
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -66,4 +67,4 @@ def index():
     return render_template("index.html", issues=issues, message=message, suggestions=suggestions)
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=5000, host="0.0.0.0")  # ← Add host="0.0.0.0"

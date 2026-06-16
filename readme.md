@@ -43,3 +43,10 @@ Then visit: `http://127.0.0.1:5000`
 - [ ] Fix resolve duplication bug
 - [ ] Database persistence
 - [ ] Production deployment
+
+## Docker
+docker tag personal-issue-resolver-flask:latest thejijogeorge/personal-issue-resolver-flask:latest
+docker tag personal-issue-resolver-fastapi:latest thejijogeorge/personal-issue-resolver-fastapi:latest
+
+docker push thejijogeorge/personal-issue-resolver-flask:latest
+docker push thejijogeorge/personal-issue-resolver-fastapi:latest
